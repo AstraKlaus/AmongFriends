@@ -299,10 +299,15 @@ public class GameOverState implements GameState {
         String report = reportBuilder.toString();
         logger.info("Sending game report to {} players in lobby {}", lobby.getPlayerCount(), lobby.getLobbyCode());
         
+        // Разбиваем отчет на части по 4096 символов
+        List<String> reportParts = splitMessage(report, 4096);
+        
         for (Player player : lobby.getPlayerList()) {
             try {
                 Long chatId = player.getChatId() != null ? player.getChatId() : player.getUserId();
-                bot.sendTextMessage(chatId, report);
+                for (String part : reportParts) {
+                    bot.sendTextMessage(chatId, part);
+                }
                 logger.info("Sent game report to player {} ({})", player.getUserName(), chatId);
                 
                 // Отправляем фотографии событий, если они есть
@@ -493,6 +498,18 @@ public class GameOverState implements GameState {
         
         keyboardMarkup.setKeyboard(keyboard);
         return keyboardMarkup;
+    }
+    
+    /**
+     * Разбивает длинное сообщение на части по maxLength символов.
+     */
+    private List<String> splitMessage(String message, int maxLength) {
+        List<String> parts = new ArrayList<>();
+        int length = message.length();
+        for (int i = 0; i < length; i += maxLength) {
+            parts.add(message.substring(i, Math.min(length, i + maxLength)));
+        }
+        return parts;
     }
 }
 // COMPLETED: GameOverState class 
